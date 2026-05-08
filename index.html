@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Atmos is a polished portfolio weather dashboard built with vanilla HTML, CSS, JavaScript, and OpenWeather API."
+    />
+    <meta name="author" content="Amar" />
+    <meta property="og:title" content="Atmos Weather App" />
+    <meta
+      property="og:description"
+      content="A cinematic vanilla JavaScript weather dashboard with dynamic video backgrounds, demo mode, favorites, and OpenWeather data."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#07110f" />
+    <title>Atmos Weather App</title>
+    <link rel="stylesheet" href="style.css?v=1.2" />
+    <script defer src="script.js?v=1.3"></script>
+  </head>
+  <body class="weather-idle has-weather-video" data-theme="dark" data-weather="idle">
+    <div class="weather-scene" aria-hidden="true">
+      <video
+        class="weather-video is-visible"
+        id="weatherVideo"
+        src="video/default.mp4?v=1"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+      ></video>
+      <video
+        class="weather-video weather-video-buffer"
+        id="weatherVideoBuffer"
+        muted
+        loop
+        playsinline
+        preload="none"
+      ></video>
+      <span class="weather-video-shade"></span>
+      <span class="scene-wash"></span>
+      <span class="scene-horizon"></span>
+      <span class="scene-sweep"></span>
+      <span class="sun"></span>
+      <span class="sun-particle" style="--x: 14%; --y: 22%; --size: 4px; --delay: 0s"></span>
+      <span class="sun-particle" style="--x: 26%; --y: 32%; --size: 3px; --delay: -1.4s"></span>
+      <span class="sun-particle" style="--x: 48%; --y: 18%; --size: 5px; --delay: -2.2s"></span>
+      <span class="sun-particle" style="--x: 67%; --y: 34%; --size: 3px; --delay: -3s"></span>
+      <span class="sun-particle" style="--x: 82%; --y: 24%; --size: 4px; --delay: -4.1s"></span>
+      <span class="sun-particle" style="--x: 36%; --y: 58%; --size: 3px; --delay: -5s"></span>
+      <span class="moon"></span>
+      <span class="stars star-field-one"></span>
+      <span class="stars star-field-two"></span>
+      <span class="cloud cloud-one"></span>
+      <span class="cloud cloud-two"></span>
+      <span class="cloud cloud-three"></span>
+      <span class="cloud cloud-four"></span>
+      <span class="cloud cloud-five"></span>
+      <span class="lightning"></span>
+      <span class="fog-overlay fog-one"></span>
+      <span class="fog-overlay fog-two"></span>
+      <span class="rain-drop" style="--x: 4%; --delay: 0ms"></span>
+      <span class="rain-drop" style="--x: 12%; --delay: -95ms"></span>
+      <span class="rain-drop" style="--x: 20%; --delay: -190ms"></span>
+      <span class="rain-drop" style="--x: 28%; --delay: -285ms"></span>
+      <span class="rain-drop" style="--x: 36%; --delay: -380ms"></span>
+      <span class="rain-drop" style="--x: 44%; --delay: -475ms"></span>
+      <span class="rain-drop" style="--x: 52%; --delay: -570ms"></span>
+      <span class="rain-drop" style="--x: 60%; --delay: -665ms"></span>
+      <span class="rain-drop" style="--x: 68%; --delay: -760ms"></span>
+      <span class="rain-drop" style="--x: 76%; --delay: -855ms"></span>
+      <span class="rain-drop" style="--x: 84%; --delay: -950ms"></span>
+      <span class="rain-drop" style="--x: 92%; --delay: -1045ms"></span>
+      <span class="rain-drop" style="--x: 16%; --delay: -1140ms"></span>
+      <span class="rain-drop" style="--x: 48%; --delay: -1235ms"></span>
+      <span class="rain-drop" style="--x: 80%; --delay: -1330ms"></span>
+      <span class="snow-flake" style="--x: 6%; --delay: 0ms"></span>
+      <span class="snow-flake" style="--x: 14%; --delay: -520ms"></span>
+      <span class="snow-flake" style="--x: 22%; --delay: -1040ms"></span>
+      <span class="snow-flake" style="--x: 30%; --delay: -1560ms"></span>
+      <span class="snow-flake" style="--x: 38%; --delay: -2080ms"></span>
+      <span class="snow-flake" style="--x: 46%; --delay: -2600ms"></span>
+      <span class="snow-flake" style="--x: 54%; --delay: -3120ms"></span>
+      <span class="snow-flake" style="--x: 62%; --delay: -3640ms"></span>
+      <span class="snow-flake" style="--x: 70%; --delay: -4160ms"></span>
+      <span class="snow-flake" style="--x: 78%; --delay: -4680ms"></span>
+      <span class="snow-flake" style="--x: 86%; --delay: -5200ms"></span>
+      <span class="snow-flake" style="--x: 94%; --delay: -5720ms"></span>
+    </div>
+
+    <button class="skip-link" type="button" data-scroll-target="forecast">
+      Skip to forecast
+    </button>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <button class="brand" type="button" data-scroll-target="top" aria-label="Atmos dashboard home">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span class="brand-copy">
+            <span class="eyebrow">OpenWeather powered</span>
+            <strong>Atmos</strong>
+          </span>
+        </button>
+
+        <div class="top-actions" aria-label="Display controls">
+          <fieldset class="segmented-control" aria-label="Temperature unit">
+            <legend class="sr-only">Temperature unit</legend>
+            <button class="unit-button is-active" type="button" data-unit="metric">
+              &deg;C
+            </button>
+            <button class="unit-button" type="button" data-unit="imperial">
+              &deg;F
+            </button>
+          </fieldset>
+
+          <button
+            class="icon-button"
+            id="themeToggle"
+            type="button"
+            aria-label="Switch to light mode"
+            aria-pressed="false"
+          >
+            <span aria-hidden="true" id="themeIcon">&#9790;</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="top" aria-busy="false">
+        <section class="command-center" aria-labelledby="searchTitle">
+          <div class="command-copy">
+            <p class="eyebrow">Live weather intelligence</p>
+            <h1 id="searchTitle">Weather dashboard</h1>
+            <p id="dashboardSubtitle">Fast current conditions with a measured outlook.</p>
+          </div>
+
+          <form class="search-form" id="searchForm" role="search">
+            <label class="sr-only" for="cityInput">City name</label>
+            <div class="input-shell">
+              <span aria-hidden="true">&#8981;</span>
+              <input
+                id="cityInput"
+                name="city"
+                type="search"
+                autocomplete="off"
+                autocapitalize="words"
+                spellcheck="false"
+                minlength="2"
+                placeholder="Search city"
+                aria-describedby="weatherStatus"
+              />
+            </div>
+            <button class="primary-button" id="searchButton" type="submit">
+              <span>Search</span>
+            </button>
+          </form>
+
+          <button
+            class="ghost-button"
+            id="locationButton"
+            type="button"
+            aria-label="Use my current location"
+          >
+            <span aria-hidden="true">&#9678;</span>
+            <span>Use my location</span>
+          </button>
+
+          <div class="project-tools" aria-label="Portfolio demo and API key controls">
+            <button class="ghost-button compact-button" id="demoButton" type="button">
+              <span>Demo mode</span>
+            </button>
+
+            <details class="api-key-card" id="apiKeyPanel">
+              <summary>
+                <span>API key</span>
+                <span class="api-key-state" id="apiKeyState">Demo ready</span>
+              </summary>
+
+              <form class="api-key-form" id="apiKeyForm">
+                <label class="sr-only" for="apiKeyInput">OpenWeather API key</label>
+                <div class="input-shell api-key-input">
+                  <span aria-hidden="true">#</span>
+                  <input
+                    id="apiKeyInput"
+                    name="apiKey"
+                    type="password"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="OpenWeather API key"
+                    aria-describedby="apiKeyHint"
+                  />
+                </div>
+
+                <div class="api-key-actions">
+                  <button class="primary-button compact-button" type="submit">Save</button>
+                  <button
+                    class="ghost-button compact-button"
+                    id="clearApiKeyButton"
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </form>
+              <p class="api-key-hint" id="apiKeyHint">Saved locally in this browser.</p>
+            </details>
+          </div>
+
+          <p class="status" id="weatherStatus" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="state-panel empty-state" id="emptyState" aria-labelledby="emptyTitle">
+          <div class="state-copy">
+            <p class="eyebrow">Standby</p>
+            <h2 id="emptyTitle">Pick a city and the forecast will settle in.</h2>
+            <p>Atmos keeps the first view calm until live weather data arrives.</p>
+          </div>
+
+          <div
+            class="empty-device"
+            role="img"
+            aria-label="Polished empty dashboard preview"
+          >
+            <span class="device-bar"></span>
+            <span class="device-temp"></span>
+            <span class="device-card device-card-one"></span>
+            <span class="device-card device-card-two"></span>
+            <span class="device-card device-card-three"></span>
+          </div>
+        </section>
+
+        <section class="state-panel loading-state" id="loadingState" hidden aria-live="polite">
+          <div class="skeleton skeleton-hero"></div>
+          <div class="skeleton-stack" aria-hidden="true">
+            <span class="skeleton"></span>
+            <span class="skeleton"></span>
+            <span class="skeleton"></span>
+            <span class="skeleton"></span>
+          </div>
+          <p id="loadingMessage">Loading weather data...</p>
+        </section>
+
+        <section class="weather-dashboard cinematic-board" id="weatherDashboard" hidden aria-live="polite">
+          <div class="dashboard-topline">
+            <p id="sourceBadge">OpenWeather data</p>
+            <p id="timezoneBadge">Local time</p>
+          </div>
+
+          <section class="dashboard-grid" aria-label="Current weather overview">
+            <article class="current-card reveal-card" aria-labelledby="currentTitle">
+              <div class="current-header">
+                <div>
+                  <p class="eyebrow" id="currentTitle">Now</p>
+                  <h2 id="locationName">--</h2>
+                </div>
+                <div class="current-actions">
+                  <button
+                    class="favorite-button"
+                    id="favoriteButton"
+                    type="button"
+                    aria-label="Save current city to favorites"
+                    aria-pressed="false"
+                    disabled
+                  >
+                    <span id="favoriteIcon" aria-hidden="true">&#9734;</span>
+                  </button>
+                  <img
+                    class="weather-icon"
+                    id="weatherIcon"
+                    src=""
+                    alt="Current weather icon"
+                    hidden
+                  />
+                </div>
+              </div>
+
+              <div class="temperature-line" aria-label="Current temperature">
+                <span id="currentTemp">--</span>
+                <span id="currentUnit">&deg;C</span>
+              </div>
+
+              <p id="weatherDescription">--</p>
+              <p class="current-summary" id="currentSummary">--</p>
+
+              <dl class="condition-strip">
+                <div>
+                  <dt>High / Low</dt>
+                  <dd id="dayHighLow">--</dd>
+                </div>
+                <div>
+                  <dt>Updated</dt>
+                  <dd id="lastUpdated">--</dd>
+                </div>
+              </dl>
+            </article>
+
+            <section class="metrics-grid insight-panel" aria-label="Weather details">
+              <div class="insight-copy">
+                <p>
+                  Real-time atmospheric details for the selected location,
+                  tuned into a compact weather command view.
+                </p>
+                <button type="button" data-scroll-target="forecast" aria-label="Jump to full forecast">
+                  See all
+                </button>
+              </div>
+
+              <div class="mini-weather-row">
+                <article class="metric-card mini-weather-card metric-card-feels">
+                  <span class="metric-icon" aria-hidden="true">&asymp;</span>
+                  <div>
+                    <p>Feels like</p>
+                    <strong id="feelsLike">--</strong>
+                  </div>
+                </article>
+                <article class="metric-card mini-weather-card metric-card-precip">
+                  <span class="metric-icon" aria-hidden="true">&#9830;</span>
+                  <div>
+                    <p>Precip chance</p>
+                    <strong id="rainChance">--</strong>
+                  </div>
+                </article>
+              </div>
+
+              <div class="compact-metrics">
+                <article class="metric-card metric-card-humidity">
+                  <span class="metric-icon" aria-hidden="true">%</span>
+                  <p>Humidity</p>
+                  <strong id="humidity">--</strong>
+                </article>
+                <article class="metric-card metric-card-wind">
+                  <span class="metric-icon" aria-hidden="true">&#8599;</span>
+                  <p>Wind</p>
+                  <strong id="windSpeed">--</strong>
+                </article>
+                <article class="metric-card metric-card-pressure">
+                  <span class="metric-icon" aria-hidden="true">&#9635;</span>
+                  <p>Pressure</p>
+                  <strong id="pressure">--</strong>
+                </article>
+                <article class="metric-card metric-card-visibility">
+                  <span class="metric-icon" aria-hidden="true">&#9676;</span>
+                  <p>Visibility</p>
+                  <strong id="visibility">--</strong>
+                </article>
+                <article class="metric-card metric-card-sun">
+                  <span class="metric-icon" aria-hidden="true">&#9788;</span>
+                  <p>Sunrise / Sunset</p>
+                  <strong id="sunTimes">--</strong>
+                </article>
+                <article class="metric-card metric-card-clouds">
+                  <span class="metric-icon" aria-hidden="true">&#9729;</span>
+                  <p>Cloud cover</p>
+                  <strong id="cloudCover">--</strong>
+                </article>
+              </div>
+
+              <section class="recent-panel" aria-label="Saved and recent cities">
+                <div class="recent-heading">
+                  <p id="favoritesTitle">Favorites</p>
+                  <span>Saved cities</span>
+                </div>
+                <div class="favorite-list" id="favoriteList"></div>
+
+                <div class="recent-heading">
+                  <p id="recentTitle">Recently searched</p>
+                  <span>Local history</span>
+                </div>
+                <div class="recent-list" id="recentList"></div>
+              </section>
+            </section>
+
+            <aside class="preview-panel side-rail reveal-card" aria-labelledby="previewTitle">
+              <div class="rail-brand">
+                <p class="eyebrow">Atmos station</p>
+                <h2 id="previewTitle">WeatherWise</h2>
+              </div>
+              <div class="rail-status">
+                <p>Status</p>
+                <strong>Live signal</strong>
+                <span>Synced with OpenWeather</span>
+              </div>
+              <div
+                class="preview-frame"
+                aria-label="Location lock globe preview"
+                role="img"
+              >
+                <div class="location-globe" id="locationGlobe" aria-hidden="true">
+                  <span class="globe-orbit globe-orbit-one"></span>
+                  <span class="globe-orbit globe-orbit-two"></span>
+                  <span class="globe-sphere">
+                    <span class="globe-surface"></span>
+                    <span class="globe-shine"></span>
+                    <span class="globe-marker" id="locationMarker"></span>
+                  </span>
+                </div>
+                <span class="preview-label" id="globeLabel">Awaiting location</span>
+              </div>
+              <p class="rail-location" id="railLocation">Search or use location to update the board.</p>
+            </aside>
+          </section>
+
+          <section class="forecast-section" aria-labelledby="hourlyTitle">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Timeline</p>
+                <h2 id="hourlyTitle">Next hours</h2>
+              </div>
+              <p id="hourlyMeta">3-hour OpenWeather intervals</p>
+            </div>
+            <div class="hourly-list" id="hourlyList" tabindex="0"></div>
+          </section>
+
+          <section class="forecast-section" id="forecast" aria-labelledby="forecastTitle">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Forecast</p>
+                <h2 id="forecastTitle">5-day forecast</h2>
+              </div>
+              <p id="forecastMeta">Temperature range and precipitation chance</p>
+            </div>
+            <div class="forecast-curve" aria-hidden="true">
+              <svg
+                class="forecast-svg"
+                id="forecastCurve"
+                viewBox="0 0 100 34"
+                preserveAspectRatio="none"
+              >
+                <path id="forecastCurvePath" d="" />
+                <g id="forecastCurvePoints"></g>
+              </svg>
+            </div>
+            <div class="forecast-grid" id="forecastList"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer">Built by Amar</footer>
+
+    <!--
+      README
+
+      Project structure:
+      - index.html: semantic app shell, accessible controls, empty/loading
+        states, weather dashboard, portfolio screenshot area, and this README.
+      - style.css: mobile-first responsive UI, glass panels, dark/light theme,
+        dynamic weather classes, animated weather scenes, skeleton loading,
+        forecast cards, and focus states.
+      - script.js: OpenWeather API integration with async/await, fetch,
+        try/catch, abortable requests, stale-response protection, geolocation,
+        unit switching, localStorage persistence, and forecast rendering.
+
+      Features:
+      - Search by city.
+      - Current weather, temperature, feels like, humidity, wind, pressure,
+        visibility, sunrise, sunset, cloud cover, precipitation chance, and weather icon.
+      - 5-day forecast from OpenWeather 5 day / 3 hour forecast endpoint.
+      - Next-hours forecast using available 3-hour OpenWeather data.
+      - Use my location button with browser geolocation.
+      - Loading state and friendly errors for missing API key, offline state,
+        invalid city, invalid key, rate limits, and network failures.
+      - Last searched city, selected unit, and theme saved in localStorage.
+      - Favorite cities saved in localStorage with one-click reload and remove.
+      - Optional browser-saved API key input for GitHub-ready demos.
+      - Demo mode fallback when live OpenWeather data is unavailable.
+      - Celsius / Fahrenheit toggle and dark / light mode.
+      - Dynamic visual theme classes: weather-clear, weather-clouds,
+        weather-rain, weather-thunderstorm, weather-snow, weather-fog,
+        and weather-night.
+      - Double-buffered video backgrounds with smooth transitions and fallback.
+
+      Setup:
+      1. Keep const API_KEY = "YOUR_API_KEY_HERE"; for public GitHub code.
+      2. Open the app and save your OpenWeather key from the API key panel.
+      3. Open index.html in a browser, or serve the folder with any static server.
+    -->
+  </body>
+</html>
