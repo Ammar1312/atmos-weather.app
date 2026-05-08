@@ -3339,12 +3339,12 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
   }
 
   .cinematic-board .current-card {
-    min-height: 360px;
+    min-height: 320px;
     padding: 14px;
   }
 
   .cinematic-board #weatherDescription {
-    font-size: 3.25rem;
+    font-size: 2.9rem;
   }
 
   .cinematic-board .metrics-grid,
@@ -3362,7 +3362,43 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
   }
 
   .side-rail {
-    min-height: 360px;
+    min-height: 300px;
+    padding: 14px;
+  }
+
+  .side-rail .preview-frame {
+    min-height: 176px;
+  }
+
+  .location-globe {
+    width: min(120px, 58%);
+    margin-bottom: 18px;
+  }
+
+  .cinematic-board .mini-weather-card {
+    min-height: 108px;
+  }
+
+  .cinematic-board .metric-card {
+    min-height: 96px;
+    padding: 11px;
+  }
+
+  .compact-metrics .metric-card {
+    min-height: 64px;
+  }
+
+  .cinematic-board .forecast-card {
+    min-height: 118px;
+    padding: 12px;
+  }
+
+  .forecast-card strong {
+    font-size: 1.24rem;
+  }
+
+  .range-track {
+    min-width: 72px;
   }
 }
 
@@ -3384,19 +3420,20 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
   }
 
   .cinematic-board .temperature-line {
-    margin-top: 34px;
+    margin-top: 24px;
   }
 
   .cinematic-board .temperature-line span:first-child {
-    font-size: 5.8rem;
+    font-size: 5.05rem;
   }
 
   .cinematic-board #weatherDescription {
-    font-size: 3.25rem;
+    font-size: 2.9rem;
   }
 
   .cinematic-board .current-summary {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
   }
 }
 
@@ -3441,15 +3478,45 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
   }
 
   .cinematic-board .current-card {
-    min-height: 330px;
+    min-height: 300px;
   }
 
   .cinematic-board .temperature-line span:first-child {
-    font-size: 4.7rem;
+    font-size: 4.2rem;
   }
 
   .cinematic-board #weatherDescription {
-    font-size: 2.65rem;
+    font-size: 2.35rem;
+  }
+
+  .cinematic-board .weather-icon,
+  .cinematic-board .weather-lottie {
+    width: 64px;
+  }
+
+  .favorite-button {
+    width: 40px;
+  }
+
+  .weather-icon,
+  .weather-lottie {
+    width: clamp(64px, 17vw, 92px);
+  }
+
+  .hour-card,
+  .forecast-card {
+    padding: 12px;
+  }
+
+  .hour-card img,
+  .forecast-card img,
+  .animated-weather-icon,
+  .weather-glyph {
+    width: 46px;
+  }
+
+  .cinematic-board .forecast-card {
+    min-height: 108px;
   }
 }
 
