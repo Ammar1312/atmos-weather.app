@@ -11,6 +11,17 @@ const RAIN_NIGHT_VIDEO = "video/rain-night.mp4?v=3";
 const THUNDERSTORM_VIDEO = "video/thunderstorm.mp4?v=1";
 const SNOW_VIDEO = "video/snow.mp4?v=1";
 const FOG_VIDEO = "video/fog.mp4?v=1";
+const LOTTIE_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js";
+const WEATHER_ANIMATION_PATHS = {
+  clearDay: "animation/sunny.json",
+  clearNight: "animation/clear-night.json",
+  cloudsDay: "animation/clouds-day.json",
+  cloudsNight: "animation/clouds-night.json",
+  rain: "animation/rainy.json",
+  thunderstorm: "animation/thunderstorm.json",
+  snow: "animation/snow.json",
+  fog: "animation/fog.json",
+};
 
 const WEATHER_VIDEO_SOURCES = {
   idle: DEFAULT_VIDEO,
@@ -113,6 +124,7 @@ const elements = {
   favoriteIcon: document.querySelector("#favoriteIcon"),
   favoriteList: document.querySelector("#favoriteList"),
   weatherDescription: document.querySelector("#weatherDescription"),
+  weatherLottie: document.querySelector("#weatherLottie"),
   weatherIcon: document.querySelector("#weatherIcon"),
   currentTemp: document.querySelector("#currentTemp"),
   currentUnit: document.querySelector("#currentUnit"),
@@ -141,6 +153,12 @@ let requestSequence = 0;
 let activeController = null;
 let activeWeatherVideo = null;
 let videoSwapSequence = 0;
+let weatherAnimationSequence = 0;
+let weatherLottieAnimation = null;
+let activeWeatherAnimationPath = "";
+let lottieLoaderPromise = null;
+let cardAnimationSequence = 0;
+let cardWeatherAnimations = [];
 
 document.addEventListener("DOMContentLoaded", initApp);
 
@@ -179,7 +197,7 @@ function bindEvents() {
 
     if (!hasApiKey()) {
       loadDemoWeather(city);
-      showSuccess("Demo mode active. Save an API key for live OpenWeather data.");
+      showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
       return;
     }
 
@@ -196,7 +214,7 @@ function bindEvents() {
   elements.demoButton?.addEventListener("click", () => {
     const city = normalizeCity(elements.cityInput.value) || DEMO_LOCATION.name;
     loadDemoWeather(city);
-    showSuccess("Demo mode active. Save an API key for live OpenWeather data.");
+    showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
   });
   elements.apiKeyForm?.addEventListener("submit", saveApiKey);
   elements.clearApiKeyButton?.addEventListener("click", clearSavedApiKey);
@@ -484,7 +502,7 @@ function positiveModulo(value, divisor) {
 function useCurrentLocation() {
   if (!hasApiKey()) {
     loadDemoWeather(DEMO_LOCATION.name);
-    showError("OpenWeather API key is missing. Showing demo data instead.");
+    showError("Live weather access is not configured. Showing demo data instead.");
     return;
   }
 
@@ -561,13 +579,8 @@ function renderWeather(currentWeather, forecast, { isDemo = false } = {}) {
   elements.cloudCover.textContent = formatPercentFromWhole(currentWeather.clouds?.all);
   elements.rainChance.textContent = nextForecast ? formatProbability(nextForecast.pop) : "0%";
 
-  if (mainCondition.icon) {
-    elements.weatherIcon.hidden = false;
-    elements.weatherIcon.src = `${ICON_URL}/${mainCondition.icon}@2x.png`;
-    elements.weatherIcon.alt = `${toTitleCase(description)} weather icon`;
-  } else {
-    elements.weatherIcon.hidden = true;
-  }
+  updatePrimaryWeatherVisual(mainCondition, description);
+  resetCardWeatherAnimations();
 
   renderHourlyForecast(hourlyForecast);
   renderDailyForecast(dailyForecast);
@@ -586,6 +599,8 @@ function buildHourlyForecast(list, timezoneOffset) {
     time: formatTime(item.dt, timezoneOffset),
     temp: formatTemperature(item.main.temp),
     description: item.weather?.[0]?.description || "Forecast",
+    main: item.weather?.[0]?.main || "",
+    id: item.weather?.[0]?.id ?? null,
     icon: item.weather?.[0]?.icon,
     pop: formatProbability(item.pop),
     wind: formatWind(item.wind?.speed),
@@ -620,6 +635,8 @@ function buildDailyForecast(list, timezoneOffset) {
         highRaw,
         lowRaw,
         description,
+        main: representative.weather?.[0]?.main || "",
+        id: representative.weather?.[0]?.id ?? null,
         icon: representative.weather?.[0]?.icon,
         pop: formatProbability(highestPop),
       };
@@ -644,7 +661,9 @@ function renderHourlyForecast(items) {
     const time = document.createElement("time");
     time.textContent = item.time;
 
-    const icon = createWeatherIcon(item.icon, item.description);
+    const icon = createWeatherIcon(item.icon, item.description, item, {
+      animated: true,
+    });
 
     const temp = document.createElement("strong");
     temp.textContent = item.temp;
@@ -691,7 +710,9 @@ function renderDailyForecast(items) {
 
     dayWrapper.append(day, description, pop);
 
-    const icon = createWeatherIcon(item.icon, item.description);
+    const icon = createWeatherIcon(item.icon, item.description, item, {
+      animated: true,
+    });
 
     const tempWrapper = document.createElement("div");
     tempWrapper.className = "forecast-temp";
@@ -871,7 +892,7 @@ function loadFavoriteCity(city) {
     loadWeatherByCity(query);
   } else {
     loadDemoWeather(city.name);
-    showSuccess("Demo mode active. Save an API key for live OpenWeather data.");
+    showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
   }
 }
 
@@ -971,7 +992,207 @@ function animateDashboardUpdate() {
   });
 }
 
-function createWeatherIcon(iconCode, description) {
+function updatePrimaryWeatherVisual(condition, description) {
+  const label = `${toTitleCase(description)} weather icon`;
+  const animationPath = getWeatherAnimationPath(condition);
+  const animationId = weatherAnimationSequence + 1;
+  weatherAnimationSequence = animationId;
+
+  showStaticWeatherIcon(condition.icon, label);
+
+  if (!animationPath || !elements.weatherLottie || prefersReducedMotion()) {
+    return;
+  }
+
+  loadWeatherAnimation(animationId, label, condition.icon, animationPath);
+}
+
+function showStaticWeatherIcon(iconCode, label) {
+  hideWeatherLottie();
+
+  if (!elements.weatherIcon) return;
+
+  if (iconCode) {
+    elements.weatherIcon.hidden = false;
+    elements.weatherIcon.src = `${ICON_URL}/${iconCode}@2x.png`;
+    elements.weatherIcon.alt = label;
+  } else {
+    elements.weatherIcon.hidden = true;
+  }
+}
+
+async function loadWeatherAnimation(animationId, label, fallbackIconCode, animationPath) {
+  try {
+    await ensureLottieReady();
+
+    if (animationId !== weatherAnimationSequence) return;
+
+    await showWeatherLottie(label, animationPath, animationId);
+  } catch {
+    if (animationId === weatherAnimationSequence) {
+      showStaticWeatherIcon(fallbackIconCode, label);
+    }
+  }
+}
+
+function showWeatherLottie(label, animationPath, animationId) {
+  if (!elements.weatherLottie || !window.lottie) {
+    return Promise.reject(new Error("Lottie is unavailable."));
+  }
+
+  return new Promise((resolve, reject) => {
+    const revealAnimation = () => {
+      if (animationId !== weatherAnimationSequence) {
+        reject(new Error("Stale weather animation."));
+        return;
+      }
+
+      elements.weatherIcon.hidden = true;
+      elements.weatherLottie.hidden = false;
+      elements.weatherLottie.setAttribute("aria-label", label);
+      weatherLottieAnimation.play();
+      resolve(weatherLottieAnimation);
+    };
+
+    if (weatherLottieAnimation && activeWeatherAnimationPath === animationPath) {
+      revealAnimation();
+      return;
+    }
+
+    destroyWeatherLottieAnimation();
+    elements.weatherLottie.hidden = true;
+    elements.weatherLottie.setAttribute("aria-label", label);
+
+    let isSettled = false;
+    const animation = window.lottie.loadAnimation({
+      container: elements.weatherLottie,
+      renderer: "svg",
+      loop: true,
+      autoplay: false,
+      path: animationPath,
+      rendererSettings: {
+        progressiveLoad: true,
+        preserveAspectRatio: "xMidYMid meet",
+      },
+    });
+    weatherLottieAnimation = animation;
+    activeWeatherAnimationPath = animationPath;
+    animation.setSpeed(0.82);
+
+    const cleanup = () => {
+      animation.removeEventListener("DOMLoaded", handleReady);
+      animation.removeEventListener("data_ready", handleReady);
+      animation.removeEventListener("data_failed", handleFailure);
+    };
+    const handleReady = () => {
+      if (isSettled) return;
+      isSettled = true;
+      cleanup();
+      revealAnimation();
+    };
+    const handleFailure = () => {
+      if (isSettled) return;
+      isSettled = true;
+      cleanup();
+      destroyWeatherLottieAnimation();
+      reject(new Error(`Could not load ${animationPath}.`));
+    };
+
+    animation.addEventListener("DOMLoaded", handleReady);
+    animation.addEventListener("data_ready", handleReady);
+    animation.addEventListener("data_failed", handleFailure);
+  });
+}
+
+function hideWeatherLottie() {
+  if (!elements.weatherLottie) return;
+
+  elements.weatherLottie.hidden = true;
+
+  if (weatherLottieAnimation) {
+    weatherLottieAnimation.stop();
+  }
+}
+
+function destroyWeatherLottieAnimation() {
+  if (weatherLottieAnimation) {
+    weatherLottieAnimation.destroy();
+    weatherLottieAnimation = null;
+  }
+
+  activeWeatherAnimationPath = "";
+  elements.weatherLottie?.replaceChildren();
+}
+
+function getWeatherAnimationPath(condition) {
+  const weatherMain = String(condition.main || "").toLowerCase();
+  const iconCode = String(condition.icon || "");
+  const id = Number(condition.id);
+  const isDaytimeIcon = iconCode.includes("d");
+
+  if (id >= 200 && id < 300) return WEATHER_ANIMATION_PATHS.thunderstorm;
+  if (id >= 300 && id < 600) return WEATHER_ANIMATION_PATHS.rain;
+  if (id >= 600 && id < 700) return WEATHER_ANIMATION_PATHS.snow;
+  if (id >= 700 && id < 800) return WEATHER_ANIMATION_PATHS.fog;
+  if (id === 800 || weatherMain === "clear") {
+    return isDaytimeIcon
+      ? WEATHER_ANIMATION_PATHS.clearDay
+      : WEATHER_ANIMATION_PATHS.clearNight;
+  }
+  if (id > 800 && id < 900) {
+    return isDaytimeIcon
+      ? WEATHER_ANIMATION_PATHS.cloudsDay
+      : WEATHER_ANIMATION_PATHS.cloudsNight;
+  }
+
+  if (weatherMain.includes("thunderstorm")) return WEATHER_ANIMATION_PATHS.thunderstorm;
+  if (weatherMain.includes("rain") || weatherMain.includes("drizzle")) {
+    return WEATHER_ANIMATION_PATHS.rain;
+  }
+  if (weatherMain.includes("snow")) return WEATHER_ANIMATION_PATHS.snow;
+  if (
+    weatherMain.includes("mist") ||
+    weatherMain.includes("fog") ||
+    weatherMain.includes("haze") ||
+    weatherMain.includes("smoke") ||
+    weatherMain.includes("dust") ||
+    weatherMain.includes("sand") ||
+    weatherMain.includes("ash") ||
+    weatherMain.includes("squall")
+  ) {
+    return WEATHER_ANIMATION_PATHS.fog;
+  }
+  if (weatherMain.includes("cloud")) {
+    return isDaytimeIcon
+      ? WEATHER_ANIMATION_PATHS.cloudsDay
+      : WEATHER_ANIMATION_PATHS.cloudsNight;
+  }
+
+  return "";
+}
+
+function ensureLottieReady() {
+  if (window.lottie) {
+    return Promise.resolve(window.lottie);
+  }
+
+  if (lottieLoaderPromise) {
+    return lottieLoaderPromise;
+  }
+
+  lottieLoaderPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = LOTTIE_CDN_URL;
+    script.async = true;
+    script.onload = () => (window.lottie ? resolve(window.lottie) : reject());
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  return lottieLoaderPromise;
+}
+
+function createWeatherIcon(iconCode, description, condition = {}, options = {}) {
   if (!iconCode) {
     const fallback = document.createElement("span");
     fallback.className = "weather-glyph";
@@ -981,12 +1202,99 @@ function createWeatherIcon(iconCode, description) {
     return fallback;
   }
 
+  const label = `${toTitleCase(description)} weather icon`;
+  const animationPath =
+    options.animated && !prefersReducedMotion()
+      ? getWeatherAnimationPath({ ...condition, icon: iconCode })
+      : "";
   const icon = document.createElement("img");
   icon.loading = "lazy";
   icon.decoding = "async";
-  icon.alt = `${toTitleCase(description)} weather icon`;
+  icon.alt = label;
   icon.src = `${ICON_URL}/${iconCode}@2x.png`;
-  return icon;
+
+  if (!animationPath) {
+    return icon;
+  }
+
+  const wrapper = document.createElement("span");
+  wrapper.className = "animated-weather-icon";
+  wrapper.setAttribute("aria-label", label);
+  wrapper.setAttribute("role", "img");
+
+  icon.alt = "";
+  icon.setAttribute("aria-hidden", "true");
+  wrapper.append(icon);
+  loadCardWeatherAnimation(wrapper, icon, animationPath, label, cardAnimationSequence);
+
+  return wrapper;
+}
+
+async function loadCardWeatherAnimation(container, fallbackIcon, animationPath, label, sequenceId) {
+  try {
+    await ensureLottieReady();
+
+    if (sequenceId !== cardAnimationSequence || !container.isConnected) {
+      return;
+    }
+
+    const slot = document.createElement("span");
+    slot.className = "card-lottie-slot";
+    slot.hidden = true;
+    container.append(slot);
+
+    const animation = window.lottie.loadAnimation({
+      container: slot,
+      renderer: "svg",
+      loop: true,
+      autoplay: false,
+      path: animationPath,
+      rendererSettings: {
+        progressiveLoad: true,
+        preserveAspectRatio: "xMidYMid meet",
+      },
+    });
+
+    animation.setSpeed(0.78);
+    cardWeatherAnimations.push(animation);
+
+    const cleanup = () => {
+      animation.removeEventListener("DOMLoaded", handleReady);
+      animation.removeEventListener("data_ready", handleReady);
+      animation.removeEventListener("data_failed", handleFailure);
+    };
+    const handleReady = () => {
+      if (sequenceId !== cardAnimationSequence || !container.isConnected) {
+        cleanup();
+        animation.destroy();
+        return;
+      }
+
+      cleanup();
+      fallbackIcon.hidden = true;
+      slot.hidden = false;
+      container.setAttribute("aria-label", label);
+      animation.play();
+    };
+    const handleFailure = () => {
+      cleanup();
+      animation.destroy();
+      slot.remove();
+      fallbackIcon.hidden = false;
+    };
+
+    animation.addEventListener("DOMLoaded", handleReady);
+    animation.addEventListener("data_ready", handleReady);
+    animation.addEventListener("data_failed", handleFailure);
+  } catch {
+    fallbackIcon.hidden = false;
+  }
+}
+
+function resetCardWeatherAnimations() {
+  cardAnimationSequence += 1;
+  cardWeatherAnimations.forEach((animation) => animation.destroy());
+  cardWeatherAnimations = [];
 }
 
 function setUnit(nextUnit, shouldReload) {
@@ -1228,14 +1536,14 @@ function saveApiKey(event) {
   const apiKey = normalizeApiKey(elements.apiKeyInput?.value || "");
 
   if (apiKey.length < 20) {
-    showError("Enter a valid OpenWeather API key or use demo mode.");
+    showError("Enter a valid live weather key or use demo mode.");
     return;
   }
 
   writeStorage(STORAGE_KEYS.apiKey, apiKey);
   elements.apiKeyInput.value = "";
   updateApiKeyControls();
-  showSuccess("API key saved. Live OpenWeather data is ready.");
+  showSuccess("Advanced settings saved. Live weather data is ready.");
 
   const city = normalizeCity(elements.cityInput.value);
 
@@ -1247,7 +1555,7 @@ function saveApiKey(event) {
 function clearSavedApiKey() {
   removeStorage(STORAGE_KEYS.apiKey);
   updateApiKeyControls();
-  showSuccess("Saved API key cleared. Demo mode is available.");
+  showSuccess("Live weather key cleared. Demo mode is available.");
 }
 
 function updateApiKeyControls() {
@@ -1260,7 +1568,7 @@ function updateApiKeyControls() {
   }
 
   if (elements.apiKeyInput) {
-    elements.apiKeyInput.placeholder = hasKey ? "Saved key active" : "OpenWeather API key";
+    elements.apiKeyInput.placeholder = hasKey ? "Live weather key saved" : "Live weather access key";
   }
 }
 
@@ -1599,7 +1907,7 @@ function getComfortLabel(temp, humidity, windSpeed = 0) {
 
 function getFriendlyError(error) {
   if (error.type === "missing-key") {
-    return "OpenWeather API key is missing.";
+    return "Live weather access is not configured.";
   }
 
   if (error.type === "offline") {
@@ -1611,7 +1919,7 @@ function getFriendlyError(error) {
   }
 
   if (error.status === 401) {
-    return "OpenWeather rejected the saved API key.";
+    return "OpenWeather rejected the saved live weather key.";
   }
 
   if (error.status === 429) {

@@ -11,10 +11,11 @@ Atmos is a cinematic weather dashboard built with semantic HTML, modern CSS, and
 - Celsius and Fahrenheit switching
 - Dark and light mode
 - Favorite cities and recent searches saved in `localStorage`
-- Browser-saved OpenWeather API key panel
+- Browser-saved Advanced settings panel for live OpenWeather access
 - Demo mode fallback when no API key is available
 - Dynamic video backgrounds for clear, cloudy, rainy, stormy, snowy, foggy, and night states
 - Smooth double-buffered video transitions
+- Lightweight Lottie weather animations across current, hourly, and 5-day forecast cards
 - Animated location globe that locks onto searched coordinates
 - Responsive mobile-first layout
 - Accessible labels, focus states, semantic sections, loading states, and error handling
@@ -27,33 +28,43 @@ Atmos is a cinematic weather dashboard built with semantic HTML, modern CSS, and
 - OpenWeather API
 - LocalStorage
 - Static video backgrounds
+- Lottie JSON animation
 
 ## Project Structure
 
 ```text
 .
-├── index.html
-├── style.css
-├── script.js
-├── video/
-│   ├── clear-day.mp4
-│   ├── clear-night.mp4
-│   ├── clouds-day.mp4
-│   ├── clouds-night.mp4
-│   ├── default.mp4
-│   ├── fog.mp4
-│   ├── rain-day.mp4
-│   ├── rain-night.mp4
-│   ├── snow.mp4
-│   └── thunderstorm.mp4
-└── screenshots/
+|-- index.html
+|-- style.css
+|-- script.js
+|-- animation/
+|   |-- clear-night.json
+|   |-- clouds-day.json
+|   |-- clouds-night.json
+|   |-- fog.json
+|   |-- rainy.json
+|   |-- snow.json
+|   |-- sunny.json
+|   `-- thunderstorm.json
+|-- video/
+|   |-- clear-day.mp4
+|   |-- clear-night.mp4
+|   |-- clouds-day.mp4
+|   |-- clouds-night.mp4
+|   |-- default.mp4
+|   |-- fog.mp4
+|   |-- rain-day.mp4
+|   |-- rain-night.mp4
+|   |-- snow.mp4
+|   `-- thunderstorm.mp4
+`-- screenshots/
 ```
 
 ## Setup
 
 1. Clone or download the project.
 2. Open `index.html` with Live Server or any static local server.
-3. Open the app, expand the `API key` panel, paste your OpenWeather API key, and click `Save`.
+3. Open the app, expand `Advanced settings`, paste your OpenWeather API key, and click `Save`.
 4. Search for a city.
 
 The app keeps this value only in the current browser through `localStorage`.
@@ -66,7 +77,7 @@ The public source code intentionally keeps:
 const API_KEY = "YOUR_API_KEY_HERE";
 ```
 
-Do not commit a real API key to GitHub. For portfolio sharing, use the in-app API key panel or let visitors try the built-in demo mode.
+Do not commit a real API key to GitHub. For portfolio sharing, use the in-app Advanced settings panel or let visitors try the built-in demo mode.
 
 ## Demo Mode
 
@@ -87,6 +98,10 @@ Recommended video guidelines:
 - keep files as small as possible
 - avoid text, logos, people, and fast camera movement
 - use calm footage with good contrast behind dashboard text
+
+## Animation
+
+Weather animations live in the `animation` folder. The app lazy-loads the Lottie player and only loads the matching JSON for the current OpenWeather condition, then falls back to the standard OpenWeather icon if an animation cannot load.
 
 ## Deployment
 

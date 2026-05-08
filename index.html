@@ -166,19 +166,19 @@
             <span>Use my location</span>
           </button>
 
-          <div class="project-tools" aria-label="Portfolio demo and API key controls">
+          <div class="project-tools" aria-label="Portfolio demo and advanced settings controls">
             <button class="ghost-button compact-button" id="demoButton" type="button">
               <span>Demo mode</span>
             </button>
 
             <details class="api-key-card" id="apiKeyPanel">
               <summary>
-                <span>API key</span>
+                <span>Advanced settings</span>
                 <span class="api-key-state" id="apiKeyState">Demo ready</span>
               </summary>
 
               <form class="api-key-form" id="apiKeyForm">
-                <label class="sr-only" for="apiKeyInput">OpenWeather API key</label>
+                <label class="sr-only" for="apiKeyInput">OpenWeather live weather key</label>
                 <div class="input-shell api-key-input">
                   <span aria-hidden="true">#</span>
                   <input
@@ -187,7 +187,7 @@
                     type="password"
                     autocomplete="off"
                     spellcheck="false"
-                    placeholder="OpenWeather API key"
+                    placeholder="Live weather access key"
                     aria-describedby="apiKeyHint"
                   />
                 </div>
@@ -203,7 +203,7 @@
                   </button>
                 </div>
               </form>
-              <p class="api-key-hint" id="apiKeyHint">Saved locally in this browser.</p>
+              <p class="api-key-hint" id="apiKeyHint">Stored locally on this device.</p>
             </details>
           </div>
 
@@ -265,6 +265,13 @@
                   >
                     <span id="favoriteIcon" aria-hidden="true">&#9734;</span>
                   </button>
+                  <div
+                    class="weather-lottie"
+                    id="weatherLottie"
+                    role="img"
+                    aria-label="Animated current weather icon"
+                    hidden
+                  ></div>
                   <img
                     class="weather-icon"
                     id="weatherIcon"
@@ -466,6 +473,7 @@
       - Optional browser-saved API key input for GitHub-ready demos.
       - Demo mode fallback when live OpenWeather data is unavailable.
       - Celsius / Fahrenheit toggle and dark / light mode.
+      - Lightweight lazy-loaded Lottie animations for supported weather states.
       - Dynamic visual theme classes: weather-clear, weather-clouds,
         weather-rain, weather-thunderstorm, weather-snow, weather-fog,
         and weather-night.
@@ -473,7 +481,7 @@
 
       Setup:
       1. Keep const API_KEY = "YOUR_API_KEY_HERE"; for public GitHub code.
-      2. Open the app and save your OpenWeather key from the API key panel.
+      2. Open the app and save your OpenWeather key from Advanced settings.
       3. Open index.html in a browser, or serve the folder with any static server.
     -->
   </body>
