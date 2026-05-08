@@ -197,7 +197,7 @@ function bindEvents() {
 
     if (!hasApiKey()) {
       loadDemoWeather(city);
-      showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
+      showSuccess("Demo forecast active. Live data is ready in Advanced settings.");
       return;
     }
 
@@ -214,7 +214,7 @@ function bindEvents() {
   elements.demoButton?.addEventListener("click", () => {
     const city = normalizeCity(elements.cityInput.value) || DEMO_LOCATION.name;
     loadDemoWeather(city);
-    showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
+    showSuccess("Demo forecast active. Live data is ready in Advanced settings.");
   });
   elements.apiKeyForm?.addEventListener("submit", saveApiKey);
   elements.clearApiKeyButton?.addEventListener("click", clearSavedApiKey);
@@ -892,7 +892,7 @@ function loadFavoriteCity(city) {
     loadWeatherByCity(query);
   } else {
     loadDemoWeather(city.name);
-    showSuccess("Demo mode active. Add a live weather key in Advanced settings for live data.");
+    showSuccess("Demo forecast active. Live data is ready in Advanced settings.");
   }
 }
 
