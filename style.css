@@ -1422,6 +1422,12 @@ body.is-demo-mode .api-key-state {
 }
 
 .status.is-error {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 520px);
+  padding: 10px;
   color: var(--danger);
   border-color: rgba(255, 130, 144, 0.34);
   border-color: color-mix(in srgb, var(--danger), transparent 62%);
@@ -1429,6 +1435,33 @@ body.is-demo-mode .api-key-state {
   background: color-mix(in srgb, var(--danger), transparent 88%);
   box-shadow: 0 14px 32px rgba(255, 130, 144, 0.12);
   box-shadow: 0 14px 32px color-mix(in srgb, var(--danger), transparent 88%);
+}
+
+.status-icon {
+  display: grid;
+  width: 34px;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--accent-ink);
+  border-radius: var(--radius);
+  background: var(--danger);
+  font-weight: 950;
+}
+
+.status-copy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.status-copy strong {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.status-copy span {
+  color: var(--muted-strong);
+  font-size: 0.82rem;
 }
 
 .status.is-success {
@@ -3198,8 +3231,7 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
 }
 
 .recent-heading p,
-.recent-heading span,
-.recent-empty {
+.recent-heading span {
   margin: 0;
   font-size: 0.78rem;
 }
@@ -3207,6 +3239,47 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
 .recent-heading p {
   color: rgba(246, 251, 248, 0.84);
   font-weight: 850;
+}
+
+.recent-empty {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 54px;
+  padding: 9px;
+  color: rgba(246, 251, 248, 0.76);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recent-empty-icon {
+  display: grid;
+  width: 34px;
+  aspect-ratio: 1;
+  place-items: center;
+  color: #04110e;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(94, 226, 196, 0.9), rgba(255, 207, 112, 0.86));
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.recent-empty-copy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.recent-empty-copy strong {
+  color: rgba(246, 251, 248, 0.92);
+  font-size: 0.82rem;
+}
+
+.recent-empty-copy span {
+  color: rgba(246, 251, 248, 0.62);
+  font-size: 0.74rem;
 }
 
 .favorite-list,
@@ -3285,8 +3358,7 @@ body[data-weather="rain"].has-weather-video .cinematic-board .hour-card {
   font-size: 0.82rem;
 }
 
-.recent-copy span,
-.recent-empty {
+.recent-copy span {
   color: rgba(246, 251, 248, 0.7);
   font-size: 0.76rem;
 }

@@ -19,6 +19,7 @@ Atmos is a cinematic weather dashboard built with semantic HTML, modern CSS, and
 - Animated location globe that locks onto searched coordinates
 - Responsive mobile-first layout
 - Accessible labels, focus states, semantic sections, loading states, and error handling
+- Polished empty states and production-style error feedback
 
 ## Tech Stack
 

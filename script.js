@@ -822,9 +822,11 @@ function renderFavoriteCities() {
   const favorites = readFavoriteCities();
 
   if (favorites.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "recent-empty";
-    empty.textContent = "Favorite cities will appear here.";
+    const empty = createListEmptyState(
+      "\u2606",
+      "No favorites yet",
+      "Save a city from the current weather card."
+    );
     elements.favoriteList.replaceChildren(empty);
     return;
   }
@@ -941,9 +943,11 @@ function renderRecentCities() {
   const recentCities = readRecentCities();
 
   if (recentCities.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "recent-empty";
-    empty.textContent = "Recent cities will appear here.";
+    const empty = createListEmptyState(
+      "\u2315",
+      "No recent searches",
+      "Search for your first city to build local history."
+    );
     elements.recentList.replaceChildren(empty);
     return;
   }
@@ -979,6 +983,30 @@ function renderRecentCities() {
   });
 
   elements.recentList.replaceChildren(fragment);
+}
+
+function createListEmptyState(icon, title, message) {
+  const empty = document.createElement("div");
+  empty.className = "recent-empty";
+
+  const iconElement = document.createElement("span");
+  iconElement.className = "recent-empty-icon";
+  iconElement.setAttribute("aria-hidden", "true");
+  iconElement.textContent = icon;
+
+  const copy = document.createElement("span");
+  copy.className = "recent-empty-copy";
+
+  const titleElement = document.createElement("strong");
+  titleElement.textContent = title;
+
+  const messageElement = document.createElement("span");
+  messageElement.textContent = message;
+
+  copy.append(titleElement, messageElement);
+  empty.append(iconElement, copy);
+
+  return empty;
 }
 
 function animateDashboardUpdate() {
@@ -1396,7 +1424,23 @@ function showEmptyState({ clearMessage = true } = {}) {
 }
 
 function showError(message) {
-  elements.status.textContent = message;
+  const errorState = getErrorStateCopy(message);
+  const icon = document.createElement("span");
+  icon.className = "status-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.textContent = "!";
+
+  const copy = document.createElement("span");
+  copy.className = "status-copy";
+
+  const title = document.createElement("strong");
+  title.textContent = errorState.title;
+
+  const detail = document.createElement("span");
+  detail.textContent = errorState.detail;
+
+  copy.append(title, detail);
+  elements.status.replaceChildren(icon, copy);
   elements.status.className = "status is-error";
   elements.status.setAttribute("role", "alert");
 }
@@ -1408,9 +1452,59 @@ function showSuccess(message) {
 }
 
 function clearStatus() {
-  elements.status.textContent = "";
+  elements.status.replaceChildren();
   elements.status.className = "status";
   elements.status.setAttribute("role", "status");
+}
+
+function getErrorStateCopy(message) {
+  const value = String(message || "Weather data could not be loaded.");
+  const normalized = value.toLowerCase();
+  const includesDemoFallback = normalized.includes("showing demo data instead");
+
+  if (normalized.includes("city not found")) {
+    return {
+      title: "City not found",
+      detail: "Try another location or check the spelling.",
+    };
+  }
+
+  if (normalized.includes("offline") || normalized.includes("network")) {
+    return {
+      title: "Connection issue",
+      detail: includesDemoFallback
+        ? "Demo forecast is shown while live data is unavailable."
+        : "Check your connection and try again.",
+    };
+  }
+
+  if (normalized.includes("live weather access") || normalized.includes("api key")) {
+    return {
+      title: "Live weather unavailable",
+      detail: includesDemoFallback
+        ? "Demo forecast is shown. Configure Advanced settings for live data."
+        : "Configure Advanced settings or use demo mode.",
+    };
+  }
+
+  if (normalized.includes("location")) {
+    return {
+      title: "Location unavailable",
+      detail: "Search manually or allow location access in your browser.",
+    };
+  }
+
+  if (normalized.includes("rate limit")) {
+    return {
+      title: "Rate limit reached",
+      detail: "Wait a moment, then try again.",
+    };
+  }
+
+  return {
+    title: "Weather could not load",
+    detail: value,
+  };
 }
 
 function createRequestId() {
