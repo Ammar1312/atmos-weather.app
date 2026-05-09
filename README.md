@@ -16,7 +16,7 @@ Atmos is a cinematic weather dashboard built with semantic HTML, modern CSS, and
 - Dynamic video backgrounds for clear, cloudy, rainy, stormy, snowy, foggy, and night states
 - Smooth double-buffered video transitions
 - Lightweight Lottie weather animations across current, hourly, and 5-day forecast cards
-- Animated location globe that locks onto searched coordinates
+- Animated Lottie location globe that locks onto searched coordinates
 - Responsive mobile-first layout
 - Accessible labels, focus states, semantic sections, loading states, and error handling
 - Polished empty states and production-style error feedback
@@ -43,6 +43,7 @@ Atmos is a cinematic weather dashboard built with semantic HTML, modern CSS, and
 |   |-- clouds-day.json
 |   |-- clouds-night.json
 |   |-- fog.json
+|   |-- globe.json
 |   |-- rainy.json
 |   |-- snow.json
 |   |-- sunny.json
@@ -102,7 +103,7 @@ Recommended video guidelines:
 
 ## Animation
 
-Weather animations live in the `animation` folder. The app lazy-loads the Lottie player and only loads the matching JSON for the current OpenWeather condition, then falls back to the standard OpenWeather icon if an animation cannot load.
+Weather animations live in the `animation` folder. The app lazy-loads the Lottie player and only loads the matching JSON for the current OpenWeather condition, then falls back to the standard OpenWeather icon if an animation cannot load. The location globe also uses a lazy-loaded Lottie layer while keeping the coordinate marker as a CSS overlay.
 
 ## Deployment
 

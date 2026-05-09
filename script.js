@@ -12,6 +12,7 @@ const THUNDERSTORM_VIDEO = "video/thunderstorm.mp4?v=1";
 const SNOW_VIDEO = "video/snow.mp4?v=1";
 const FOG_VIDEO = "video/fog.mp4?v=1";
 const LOTTIE_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js";
+const GLOBE_ANIMATION_PATH = "animation/globe.json";
 const WEATHER_ANIMATION_PATHS = {
   clearDay: "animation/sunny.json",
   clearNight: "animation/clear-night.json",
@@ -117,6 +118,7 @@ const elements = {
   timezoneBadge: document.querySelector("#timezoneBadge"),
   locationName: document.querySelector("#locationName"),
   locationGlobe: document.querySelector("#locationGlobe"),
+  locationGlobeAnimation: document.querySelector("#locationGlobeAnimation"),
   locationMarker: document.querySelector("#locationMarker"),
   globeLabel: document.querySelector("#globeLabel"),
   railLocation: document.querySelector("#railLocation"),
@@ -157,6 +159,8 @@ let weatherAnimationSequence = 0;
 let weatherLottieAnimation = null;
 let activeWeatherAnimationPath = "";
 let lottieLoaderPromise = null;
+let globeLottieAnimation = null;
+let globeAnimationPromise = null;
 let cardAnimationSequence = 0;
 let cardWeatherAnimations = [];
 
@@ -1568,6 +1572,7 @@ function updateLocationGlobe(currentWeather) {
   elements.locationGlobe.classList.remove("is-locking");
   void elements.locationGlobe.offsetWidth;
   elements.locationGlobe.classList.add("has-lock", "is-locking");
+  loadLocationGlobeAnimation();
 
   if (elements.globeLabel) {
     elements.globeLabel.textContent = `Locked on ${locationLabel}`;
@@ -1579,6 +1584,84 @@ function updateLocationGlobe(currentWeather) {
       "lat"
     )} / ${formatCoordinate(longitude, "lon")}`;
   }
+}
+
+function loadLocationGlobeAnimation() {
+  if (!elements.locationGlobeAnimation || prefersReducedMotion()) {
+    return;
+  }
+
+  if (globeLottieAnimation) {
+    elements.locationGlobe?.classList.add("has-lottie-globe");
+    globeLottieAnimation.play();
+    return;
+  }
+
+  if (globeAnimationPromise) {
+    return;
+  }
+
+  globeAnimationPromise = ensureLottieReady()
+    .then(() => {
+      if (!window.lottie || !elements.locationGlobeAnimation) return null;
+
+      return new Promise((resolve, reject) => {
+        let isSettled = false;
+        const animation = window.lottie.loadAnimation({
+          container: elements.locationGlobeAnimation,
+          renderer: "svg",
+          loop: true,
+          autoplay: false,
+          path: GLOBE_ANIMATION_PATH,
+          rendererSettings: {
+            progressiveLoad: true,
+            preserveAspectRatio: "xMidYMid meet",
+          },
+        });
+
+        globeLottieAnimation = animation;
+        animation.setSpeed(0.62);
+
+        const cleanup = () => {
+          animation.removeEventListener("DOMLoaded", handleReady);
+          animation.removeEventListener("data_ready", handleReady);
+          animation.removeEventListener("data_failed", handleFailure);
+        };
+        const handleReady = () => {
+          if (isSettled) return;
+          isSettled = true;
+          cleanup();
+          elements.locationGlobe?.classList.add("has-lottie-globe");
+          animation.play();
+          resolve(animation);
+        };
+        const handleFailure = () => {
+          if (isSettled) return;
+          isSettled = true;
+          cleanup();
+          reject(new Error(`Could not load ${GLOBE_ANIMATION_PATH}.`));
+        };
+
+        animation.addEventListener("DOMLoaded", handleReady);
+        animation.addEventListener("data_ready", handleReady);
+        animation.addEventListener("data_failed", handleFailure);
+      });
+    })
+    .catch(() => {
+      handleLocationGlobeFailure();
+      return null;
+    });
+}
+
+function handleLocationGlobeFailure() {
+  if (globeLottieAnimation) {
+    globeLottieAnimation.destroy();
+    globeLottieAnimation = null;
+  }
+
+  globeAnimationPromise = null;
+  elements.locationGlobe?.classList.remove("has-lottie-globe");
+  elements.locationGlobeAnimation?.replaceChildren();
 }
 
 function resetLocationGlobe() {

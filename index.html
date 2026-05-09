@@ -16,8 +16,8 @@
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#07110f" />
     <title>Atmos Weather App</title>
-    <link rel="stylesheet" href="style.css?v=1.5" />
-    <script defer src="script.js?v=1.5"></script>
+    <link rel="stylesheet" href="style.css?v=1.6" />
+    <script defer src="script.js?v=1.6"></script>
   </head>
   <body class="weather-idle has-weather-video" data-theme="dark" data-weather="idle">
     <div class="weather-scene" aria-hidden="true">
@@ -397,6 +397,7 @@
                   <span class="globe-orbit globe-orbit-one"></span>
                   <span class="globe-orbit globe-orbit-two"></span>
                   <span class="globe-sphere">
+                    <span class="globe-lottie" id="locationGlobeAnimation"></span>
                     <span class="globe-surface"></span>
                     <span class="globe-shine"></span>
                     <span class="globe-marker" id="locationMarker"></span>
@@ -473,7 +474,8 @@
       - Optional browser-saved API key input for GitHub-ready demos.
       - Demo mode fallback when live OpenWeather data is unavailable.
       - Celsius / Fahrenheit toggle and dark / light mode.
-      - Lightweight lazy-loaded Lottie animations for supported weather states.
+      - Lightweight lazy-loaded Lottie animations for supported weather states
+        and the location globe preview.
       - Dynamic visual theme classes: weather-clear, weather-clouds,
         weather-rain, weather-thunderstorm, weather-snow, weather-fog,
         and weather-night.
